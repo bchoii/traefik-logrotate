@@ -1,0 +1,2 @@
+crontasks text eol=lf
+traefik-logrotate text eol=lf

@@ -1,0 +1,30 @@
+http:
+  middlewares:
+    secure-middlewares:
+      chain:
+        middlewares:
+          - test-ipwhitelist
+          - test-ratelimit
+          - test-compress
+    common-middlewares:
+      chain:
+        middlewares:
+          - test-ratelimit
+          - test-compress
+    test-ipwhitelist:
+      ipWhiteList:
+        sourceRange:
+          - 0.0.0.0/0
+    test-ratelimit:
+      rateLimit:
+        average: 100
+        burst: 50
+    test-compress:
+      compress: {}
+
+tcp:
+  middlewares:
+    tcp-ipwhitelist:
+      ipWhiteList:
+        sourceRange:
+          - 0.0.0.0/0

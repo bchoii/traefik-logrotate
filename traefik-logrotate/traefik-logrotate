@@ -1,0 +1,10 @@
+/logs/*.json {
+  rotate 3
+  size 1M
+  missingok
+  notifempty
+  postrotate
+    docker kill --signal="USR1" traefik
+  endscript
+}
+

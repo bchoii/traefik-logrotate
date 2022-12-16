@@ -1,0 +1,52 @@
+x-logging: &default-logging
+  driver: awslogs
+  options:
+    awslogs-region: ap-southeast-1
+    awslogs-group: "example.com"
+    awslogs-create-group: "true"
+    tag: "{{.Name}}"
+
+services:
+  traefik:
+    container_name: traefik
+    image: traefik:v2.9.5
+    logging: *default-logging
+    ports:
+      - 80:80
+      - 443:443
+      - 5432:5432
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml
+      - ./traefik/provider.yml:/etc/traefik/provider.yml
+      - ./letsencrypt:/letsencrypt
+      - ./traefik/logs:/var/log
+    labels:
+      traefik.enable: true
+      traefik.http.routers.traefik.rule: Host(`traefik.example.com`)
+      traefik.http.routers.traefik.entrypoints: websecure
+      traefik.http.routers.traefik.tls.certresolver: letsencrypt
+      traefik.http.routers.traefik.middlewares: secure-middlewares@file
+      traefik.http.services.traefik.loadbalancer.server.port: 8080
+
+  whoami:
+    container_name: whoami
+    image: traefik/whoami:v1.8.7
+    logging: *default-logging
+    restart: unless-stopped
+    labels:
+      traefik.enable: true
+      traefik.http.routers.whoami.rule: Host(`whoami.example.com`)
+      traefik.http.routers.whoami.entrypoints: websecure
+      traefik.http.routers.whoami.tls.certresolver: letsencrypt
+      traefik.http.services.whoami.loadbalancer.server.port: 80
+      traefik.http.routers.whoami.middlewares: secure-middlewares@file
+
+  traefik-logrotate:
+    container_name: traefik-logrotate
+    build:
+      context: ./traefik-logrotate
+    logging: *default-logging
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/logs:/logs
